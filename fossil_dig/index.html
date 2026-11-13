@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#EFE7D8">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
+<title>Fossil Dig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: single-column field notebook — specimen header, stat strip, square dig grid, tool tray; max 520px wide */
+:root{
+  --bg:#EFE7D8; --paper:#F8F3E8; --ink:#2E261F; --muted:#76695A; --line:#CDBFA8;
+  --accent:#B5542C; --accent-ink:#FFF8EE; --bad:#B3261E; --good:#4E7A3A;
+  --bone:#F7EFDC; --bone-edge:#3A2E24; --grid:#3A2E24; --cellgap:rgba(58,46,36,.22);
+  --r0:#E6C176; --r1:#D98B6A; --r2:#A9C08C; --r3:#9DB4CA; --r4:#D7A4B2;
+  --r5:#EADCB2; --r6:#8FC4B6; --r7:#B7A9D6; --r8:#BC9C7C;
+  --f-display:"Zilla Slab",Rockwell,"Roboto Slab",Georgia,serif;
+  --f-body:"Work Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1B1713; --paper:#25201A; --ink:#EEE4D3; --muted:#A99A86; --line:#43392E;
+  --accent:#E07B4C; --accent-ink:#1B1713; --bad:#FF6B5E; --good:#8FC27A;
+  --bone:#F3E9D2; --bone-edge:#1A140F; --grid:#0F0C09; --cellgap:rgba(0,0,0,.35);
+  --r0:#A27A22; --r1:#8A4A33; --r2:#56703F; --r3:#435C77; --r4:#7F4C5B;
+  --r5:#7D7468; --r6:#3C7266; --r7:#5B4E85; --r8:#5A3E2B; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#1B1713; --paper:#25201A; --ink:#EEE4D3; --muted:#A99A86; --line:#43392E;
+  --accent:#E07B4C; --accent-ink:#1B1713; --bad:#FF6B5E; --good:#8FC27A;
+  --bone:#F3E9D2; --bone-edge:#1A140F; --grid:#0F0C09; --cellgap:rgba(0,0,0,.35);
+  --r0:#A27A22; --r1:#8A4A33; --r2:#56703F; --r3:#435C77; --r4:#7F4C5B;
+  --r5:#7D7468; --r6:#3C7266; --r7:#5B4E85; --r8:#5A3E2B; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  -webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+.wrap{max-width:520px;margin:0 auto;padding-block:14px 28px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-weight:700;font-size:2rem;line-height:1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.tag{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:6px}
+.lives{display:flex;gap:4px}
+.lives svg{width:30px;height:30px;transition:opacity .3s,filter .3s}
+.lives svg.lost{opacity:.28;filter:grayscale(1)}
+
+.strip{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sizes{display:flex;gap:4px}
+.chip{font:600 .82rem var(--f-body);border:1.5px solid var(--line);background:var(--paper);color:var(--ink);
+  border-radius:999px;padding:6px 10px;min-width:44px;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.lvl{display:flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:.85rem;font-variant-numeric:tabular-nums}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);
+  font:600 1rem var(--f-body);cursor:pointer;display:grid;place-items:center}
+.icon-btn:disabled{opacity:.35;cursor:default}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.boardframe{position:relative;background:var(--grid);padding:4px;border-radius:12px;
+  box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 10px 24px -14px rgba(40,25,10,.6)}
+.board{display:grid;gap:1px;background:var(--cellgap);aspect-ratio:1/1;width:100%;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:8px;overflow:hidden}
+.cell{position:relative;min-width:0;min-height:0;overflow:hidden;cursor:pointer;background:var(--rc)}
+.cell>svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.cell::after{content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset var(--bl,0) 0 0 var(--grid), inset calc(-1*var(--br,0)) 0 0 var(--grid),
+             inset 0 var(--bt,0) 0 var(--grid), inset 0 calc(-1*var(--bb,0)) 0 var(--grid)}
+.cell .x{width:38%;height:38%;color:var(--ink);opacity:.55}
+.cell.auto .x{opacity:.28}
+.cell .bone{width:82%;height:82%;animation:pop .28s ease-out}
+.cell.bad{background:repeating-linear-gradient(135deg,var(--rc) 0 6px,color-mix(in srgb,var(--bad) 22%,var(--rc)) 6px 12px)}
+.cell.bad .x{color:var(--bad);opacity:1;width:46%;height:46%}
+.cell.flash{animation:flash .5s}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(.3) rotate(-30deg)}70%{transform:translate(-50%,-50%) scale(1.12)}100%{transform:translate(-50%,-50%) scale(1)}}
+@keyframes flash{0%,100%{filter:none}30%{filter:brightness(1.35) saturate(1.4)}}
+.shake{animation:shake .38s}
+@keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+
+.tray{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:stretch}
+.mode{display:grid;grid-template-columns:1fr 1fr;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:3px;gap:3px}
+.mode button{border:0;border-radius:11px;background:transparent;color:var(--ink);font:600 .95rem var(--f-body);
+  display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;cursor:pointer}
+.mode button svg{width:22px;height:22px}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tray .icon-btn{width:52px;height:auto;min-height:54px;border-radius:14px;font-size:.72rem;flex-direction:column;gap:2px;display:flex;align-items:center;justify-content:center}
+.tray .icon-btn svg{width:20px;height:20px}
+
+.meta{display:flex;justify-content:space-between;gap:10px;font-family:var(--f-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.opt{display:flex;align-items:center;gap:8px;font:500 .85rem var(--f-body);color:var(--ink);cursor:pointer}
+.opt input{width:18px;height:18px;accent-color:var(--accent)}
+
+.rules{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.88rem}
+.rules h2{font-family:var(--f-display);font-size:1.05rem;margin:0 0 6px}
+.rules ul{margin:0;padding-left:18px;display:grid;gap:3px}
+
+.overlay{position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 70%,transparent);
+  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);border-radius:12px;padding:16px}
+.card{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:18px;text-align:center;max-width:300px;display:grid;gap:8px;
+  box-shadow:0 12px 30px -12px rgba(0,0,0,.45)}
+.card h3{font-family:var(--f-display);font-size:1.5rem;margin:0}
+.card p{margin:0;color:var(--muted);font-size:.9rem}
+.card .big{font-family:var(--f-mono);font-size:.85rem;color:var(--ink)}
+.cta{border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:600 1rem var(--f-body);padding:12px 16px;cursor:pointer;margin-top:4px}
+.cta.secondary{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+@media (prefers-reduced-motion:reduce){.shake,.cell .bone,.cell.flash{animation:none}}
+</style>
+
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="boneShape" transform="rotate(-38 50 50)">
+      <circle cx="17" cy="41" r="11"/><circle cx="17" cy="59" r="11"/>
+      <circle cx="83" cy="41" r="11"/><circle cx="83" cy="59" r="11"/>
+      <rect x="16" y="41" width="68" height="18" rx="3"/>
+    </g>
+    <symbol id="bone" viewBox="0 0 100 100">
+      <use href="#boneShape" fill="var(--bone-edge)" stroke="var(--bone-edge)" stroke-width="9" stroke-linejoin="round"/>
+      <use href="#boneShape" fill="var(--bone)"/>
+      <path d="M38 64 L60 40" stroke="var(--bone-edge)" stroke-opacity=".18" stroke-width="3" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="xmark" viewBox="0 0 24 24"><path d="M5 5 L19 19 M19 5 L5 19" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="undo" viewBox="0 0 24 24"><path d="M9 7 L4 12 L9 17 M4 12 H14 a6 6 0 0 1 0 12" transform="translate(0 -3)" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="restart" viewBox="0 0 24 24"><path d="M20 12 a8 8 0 1 1 -2.4 -5.7 M20 4 V9 H15" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Fossil Dig</h1>
+      <div class="tag" id="specimen">Specimen —</div>
+    </div>
+    <div class="lives" id="lives" aria-label="Lives remaining"></div>
+  </header>
+
+  <div class="strip">
+    <div class="sizes" id="sizes" role="group" aria-label="Grid size"></div>
+    <div class="lvl">
+      <button class="icon-btn" id="prev" aria-label="Previous dig">&#8249;</button>
+      <span id="lvlLabel">Dig 1</span>
+      <button class="icon-btn" id="next" aria-label="Next dig">&#8250;</button>
+    </div>
+  </div>
+
+  <div class="boardframe" id="frame">
+    <div class="board" id="board" aria-label="Dig site grid"></div>
+    <div class="overlay" id="overlay" hidden></div>
+  </div>
+
+  <div class="meta"><span id="formation">—</span><span id="timer">00:00</span></div>
+
+  <div class="tray">
+    <div class="mode" role="group" aria-label="Tool">
+      <button id="modeMark" aria-pressed="true"><svg><use href="#xmark"/></svg>Mark</button>
+      <button id="modeDig" aria-pressed="false"><svg viewBox="0 0 100 100"><use href="#bone"/></svg>Dig</button>
+    </div>
+    <button class="icon-btn" id="undoBtn" aria-label="Undo mark"><svg><use href="#undo"/></svg>Undo</button>
+    <button class="icon-btn" id="restartBtn" aria-label="Restart dig"><svg><use href="#restart"/></svg>Reset</button>
+  </div>
+
+  <label class="opt"><input type="checkbox" id="autoMark" checked> Auto-mark cells ruled out by each fossil</label>
+
+  <section class="rules">
+    <h2>Field rules</h2>
+    <ul>
+      <li>Each row, column and rock stratum (color) holds exactly one fossil.</li>
+      <li>Fossils never touch, not even diagonally.</li>
+      <li><b>Mark</b> rules out a cell. Drag to mark several. <b>Dig</b> excavates a fossil.</li>
+      <li>Digging an empty cell costs one of three lives. Long-press any cell to dig while in Mark mode.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffle(a,r){for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function placeSolution(n,r){const sol=[];const used=new Array(n).fill(false);
+  function go(row){if(row===n)return true;for(const c of shuffle([...Array(n).keys()],r)){if(used[c])continue;if(row>0&&Math.abs(sol[row-1]-c)<=1)continue;used[c]=true;sol[row]=c;if(go(row+1))return true;used[c]=false;}return false;}
+  go(0);return sol;}
+function growRegions(n,sol,r){const g=Array.from({length:n},()=>new Array(n).fill(-1));sol.forEach((c,row)=>g[row][c]=row);let left=n*n-n;
+  const D=[[1,0],[-1,0],[0,1],[0,-1]];
+  while(left>0){const fr=[];for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(g[y][x]<0)for(const[dy,dx]of D){const yy=y+dy,xx=x+dx;if(yy>=0&&yy<n&&xx>=0&&xx<n&&g[yy][xx]>=0){fr.push([y,x,g[yy][xx]]);}}
+    const [y,x,id]=fr[Math.floor(r()*fr.length)];g[y][x]=id;left--;}
+  return g;}
+function findSolutions(n,g,limit){const out=[];const cu=new Array(n).fill(false),ru=new Array(n).fill(false),cur=[];
+  (function go(row,prev){if(out.length>=limit)return;if(row===n){out.push(cur.slice());return;}for(let c=0;c<n;c++){if(cu[c]||Math.abs(prev-c)<=1)continue;const id=g[row][c];if(ru[id])continue;cu[c]=ru[id]=true;cur[row]=c;go(row+1,c);cu[c]=ru[id]=false;if(out.length>=limit)return;}})(0,-9);
+  return out;}
+function connectedWithout(n,g,id,ey,ex){let start=null,total=0;for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(g[y][x]===id&&!(y===ey&&x===ex)){total++;if(!start)start=[y,x];}
+  if(!start)return false;const seen=new Set([start[0]*n+start[1]]);const q=[start];while(q.length){const[y,x]=q.pop();for(const[dy,dx]of[[1,0],[-1,0],[0,1],[0,-1]]){const yy=y+dy,xx=x+dx;if(yy<0||yy>=n||xx<0||xx>=n||(yy===ey&&xx===ex)||g[yy][xx]!==id)continue;const k=yy*n+xx;if(!seen.has(k)){seen.add(k);q.push([yy,xx]);}}}return seen.size===total;}
+function countSolutions(n,g,limit){let count=0;const cu=new Array(n).fill(false),ru=new Array(n).fill(false);let prev=-9;
+  (function go(row,prev){if(count>=limit)return;if(row===n){count++;return;}for(let c=0;c<n;c++){if(cu[c])continue;if(Math.abs(prev-c)<=1)continue;const id=g[row][c];if(ru[id])continue;cu[c]=ru[id]=true;go(row+1,c);cu[c]=ru[id]=false;if(count>=limit)return;}})(0,-9);
+  return count;}
+function generate(n,seed){const r=rng(seed);
+  for(let t=0;t<500;t++){const sol=placeSolution(n,r);const g=growRegions(n,sol,r);
+    for(let k=0;k<n*n*3;k++){const sols=findSolutions(n,g,2);if(sols.length===1)return{n,sol,regions:g,tries:t+1};
+      const alt=sols.find(a=>a.some((c,i)=>c!==sol[i]));
+      const cand=[];alt.forEach((c,row)=>{if(c===sol[row])return;const id=g[row][c];const nb=new Set();for(const[dy,dx]of[[1,0],[-1,0],[0,1],[0,-1]]){const yy=row+dy,xx=c+dx;if(yy>=0&&yy<n&&xx>=0&&xx<n&&g[yy][xx]!==id)nb.add(g[yy][xx]);}if(nb.size&&connectedWithout(n,g,id,row,c))for(const b of nb)cand.push([row,c,b]);});
+      if(!cand.length)break;const[y,x,b]=cand[Math.floor(r()*cand.length)];g[y][x]=b;}}
+  return null;}
+
+
+const FORMATIONS=["Morrison Fm., Utah","Hell Creek Fm., Montana","Dinosaur Park Fm., Alberta","Yixian Fm., Liaoning","Ischigualasto Fm., Argentina","Two Medicine Fm., Montana","Djadochta Fm., Mongolia","Tendaguru Fm., Tanzania","Wessex Fm., Isle of Wight","Nemegt Fm., Mongolia","Kem Kem Beds, Morocco","Chinle Fm., Arizona","Lance Fm., Wyoming","Kayenta Fm., Arizona","Bahariya Fm., Egypt"];
+const TAXA=["Allosaurus","Triceratops","Centrosaurus","Sinosauropteryx","Herrerasaurus","Maiasaura","Velociraptor","Giraffatitan","Iguanodon","Tarbosaurus","Spinosaurus","Coelophysis","Edmontosaurus","Dilophosaurus","Carcharodontosaurus","Stegosaurus","Pachycephalosaurus","Parasaurolophus","Ankylosaurus","Deinonychus"];
+const ELEMENTS=["femur","skull","tibia","vertebra","scapula","humerus","pelvis","rib","jaw","claw"];
+const SIZES=[5,6,7,8,9];
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+
+let S=null; // game state
+let progress=store.get("fossildig.progress",{}); // {size:{cleared:[levels], best:{level:secs}}}
+let timerId=null;
+
+function seedFor(n,l){return n*100003+l*7919;}
+function pick(arr,n,l,salt){return arr[(n*31+l*17+salt)%arr.length];}
+
+function newGame(n,level,restore){
+  const p=generate(n,seedFor(n,level));
+  S=restore&&restore.n===n&&restore.level===level?restore:{
+    n,level,marks:Array(n*n).fill(0), // 0 none,1 mark,2 auto mark,3 bone,4 bad
+    lives:3,elapsed:0,started:false,done:false,undo:[]};
+  S.sol=p.sol;S.regions=p.regions;
+  store.set("fossildig.last",{n,level});
+  buildBoard();renderAll();
+  stopTimer();if(S.started&&!S.done)startTimer();
+}
+
+function buildBoard(){
+  const {n,regions}=S;const b=$("board");b.innerHTML="";
+  b.style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;b.style.gridTemplateRows=`repeat(${n},minmax(0,1fr))`;
+  const W=n>=8?"3px":"3.5px";
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const c=document.createElement("div");c.className="cell";c.dataset.i=y*n+x;
+    const id=regions[y][x];c.style.setProperty("--rc",`var(--r${id})`);
+    if(x>0&&regions[y][x-1]!==id)c.style.setProperty("--bl",W);
+    if(x<n-1&&regions[y][x+1]!==id)c.style.setProperty("--br",W);
+    if(y>0&&regions[y-1][x]!==id)c.style.setProperty("--bt",W);
+    if(y<n-1&&regions[y+1][x]!==id)c.style.setProperty("--bb",W);
+    c.setAttribute("role","button");
+    b.appendChild(c);
+  }
+}
+
+const XSVG='<svg class="x"><use href="#xmark"/></svg>';
+const BSVG='<svg class="bone" viewBox="0 0 100 100"><use href="#bone"/></svg>';
+function renderCell(i){
+  const c=$("board").children[i];const v=S.marks[i];
+  c.classList.toggle("auto",v===2);c.classList.toggle("bad",v===4);
+  c.innerHTML=v===1||v===2||v===4?XSVG:v===3?BSVG:"";
+  const y=Math.floor(i/S.n),x=i%S.n;
+  c.setAttribute("aria-label",`Row ${y+1} column ${x+1}, ${["empty","marked","marked","fossil","empty, wrong dig"][v]}`);
+}
+function renderAll(){
+  const {n,level}=S;
+  for(let i=0;i<n*n;i++)renderCell(i);
+  $("lives").innerHTML=[0,1,2].map(k=>`<svg viewBox="0 0 100 100" class="${k<S.lives?"":"lost"}"><use href="#bone"/></svg>`).join("");
+  $("lives").setAttribute("aria-label",`${S.lives} of 3 lives left`);
+  $("sizes").innerHTML=SIZES.map(s=>`<button class="chip" data-size="${s}" aria-pressed="${s===n}">${s}×${s}</button>`).join("");
+  $("lvlLabel").textContent=`Dig ${level}`;$("prev").disabled=level<=1;
+  const tag=`FD-${n}${String(level).padStart(3,"0")}`;
+  $("specimen").textContent=`Specimen ${tag} · ${pick(TAXA,n,level,3)} ${pick(ELEMENTS,n,level,5)}`;
+  const cleared=(progress[n]&&progress[n].cleared||[]).includes(level);
+  const best=progress[n]&&progress[n].best&&progress[n].best[level];
+  $("formation").textContent=pick(FORMATIONS,n,level,0)+(cleared?` · best ${fmt(best)}`:"");
+  $("undoBtn").disabled=!S.undo.length||S.done;
+  renderTimer();
+  renderOverlay();
+}
+function fmt(s){s=Math.floor(s||0);return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");}
+function renderTimer(){$("timer").textContent=fmt(S.elapsed);}
+function startTimer(){stopTimer();let last=performance.now();timerId=setInterval(()=>{const now=performance.now();S.elapsed+=(now-last)/1000;last=now;renderTimer();},250);}
+function stopTimer(){if(timerId)clearInterval(timerId);timerId=null;}
+function touchStart(){if(!S.started){S.started=true;startTimer();}}
+
+function renderOverlay(){
+  const o=$("overlay");
+  if(!S.done){o.hidden=true;return;}
+  if(o.hidden){o.style.pointerEvents="none";setTimeout(()=>{o.style.pointerEvents="";},500);} // swallow the finishing tap's ghost click
+  o.hidden=false;
+  if(S.done==="win"){
+    o.innerHTML=`<div class="card"><svg viewBox="0 0 100 100" width="56" height="56" style="margin:0 auto"><use href="#bone"/></svg>
+      <h3>Specimen recovered</h3><p>${$("specimen").textContent.replace("Specimen ","")}</p>
+      <div class="big">Time ${fmt(S.elapsed)} · Lives ${S.lives}/3</div>
+      <button class="cta" id="ovNext">Next dig</button></div>`;
+    $("ovNext").onclick=()=>newGame(S.n,S.level+1);
+  }else{
+    o.innerHTML=`<div class="card"><h3>Site collapsed</h3><p>Three wrong digs. The fossils are shown on the grid.</p>
+      <button class="cta" id="ovRetry">Try this dig again</button><button class="cta secondary" id="ovHide">View grid</button></div>`;
+    $("ovRetry").onclick=()=>newGame(S.n,S.level);
+    $("ovHide").onclick=()=>{o.hidden=true;};
+  }
+}
+
+function neighborsRuledOut(i){
+  const {n,regions}=S;const y=Math.floor(i/n),x=i%n,id=regions[y][x];const out=[];
+  for(let yy=0;yy<n;yy++)for(let xx=0;xx<n;xx++){
+    if(yy===y&&xx===x)continue;
+    if(yy===y||xx===x||regions[yy][xx]===id||(Math.abs(yy-y)<=1&&Math.abs(xx-x)<=1))out.push(yy*n+xx);
+  }
+  return out;
+}
+
+function dig(i){
+  if(S.done)return;const v=S.marks[i];if(v===3||v===4)return;
+  touchStart();
+  const n=S.n,y=Math.floor(i/n),x=i%n;
+  const cell=$("board").children[i];
+  if(S.sol[y]===x){
+    S.marks[i]=3;renderCell(i);cell.classList.remove("flash");void cell.offsetWidth;cell.classList.add("flash");
+    if($("autoMark").checked)for(const j of neighborsRuledOut(i))if(S.marks[j]===0){S.marks[j]=2;renderCell(j);}
+    if(S.marks.filter(m=>m===3).length===n)win();
+    vibrate(15);
+  }else{
+    S.marks[i]=4;S.lives--;renderCell(i);
+    const f=$("frame");f.classList.remove("shake");void f.offsetWidth;f.classList.add("shake");
+    vibrate([40,40,60]);
+    if(S.lives<=0)lose();
+  }
+  S.undo=S.undo.filter(e=>e.every(([j])=>S.marks[j]!==3&&S.marks[j]!==4));
+  renderAll();
+}
+function vibrate(p){try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}}
+function win(){
+  S.done="win";stopTimer();
+  const rec=progress[S.n]||(progress[S.n]={cleared:[],best:{}});
+  if(!rec.cleared.includes(S.level))rec.cleared.push(S.level);
+  if(!rec.best[S.level]||S.elapsed<rec.best[S.level])rec.best[S.level]=Math.floor(S.elapsed);
+  store.set("fossildig.progress",progress);
+}
+function lose(){
+  S.done="lose";stopTimer();
+  S.sol.forEach((x,y)=>{const i=y*S.n+x;if(S.marks[i]!==3)S.marks[i]=3;});
+}
+
+/* ---------- input ---------- */
+let mode="mark";
+function setMode(m){mode=m;$("modeMark").setAttribute("aria-pressed",m==="mark");$("modeDig").setAttribute("aria-pressed",m==="dig");}
+$("modeMark").onclick=()=>setMode("mark");$("modeDig").onclick=()=>setMode("dig");
+
+let drag=null,lpTimer=null;
+function cellAt(e){const el=document.elementFromPoint(e.clientX,e.clientY);const c=el&&el.closest&&el.closest(".cell");return c&&c.parentNode===$("board")?+c.dataset.i:null;}
+function paint(i){
+  const v=S.marks[i];if(v===3||v===4)return;
+  const want=drag.value;if((want===1&&(v===1||v===2))||(want===0&&v===0))return;
+  drag.changes.push([i,v]);S.marks[i]=want;renderCell(i);
+}
+const board=$("board");
+board.addEventListener("pointerdown",e=>{
+  if(S.done)return;const i=cellAt(e);if(i==null)return;e.preventDefault();
+  try{board.setPointerCapture(e.pointerId);}catch(_){}
+  if(mode==="dig"){drag={type:"dig",start:i};return;}
+  const v=S.marks[i];if(v===3||v===4){drag=null;return;}
+  touchStart();
+  drag={type:"mark",value:(v===0)?1:0,changes:[],start:i,moved:false};paint(i);
+  lpTimer=setTimeout(()=>{ if(drag&&drag.type==="mark"&&!drag.moved){ // long press -> dig
+      drag.changes.forEach(([j,old])=>{S.marks[j]=old;renderCell(j);});drag=null;dig(i);} },450);
+});
+board.addEventListener("pointermove",e=>{
+  if(!drag||drag.type!=="mark")return;const i=cellAt(e);if(i==null)return;
+  if(i!==drag.start){drag.moved=true;clearTimeout(lpTimer);}paint(i);
+});
+function endDrag(e){
+  clearTimeout(lpTimer);if(!drag)return;
+  if(drag.type==="dig"){const i=cellAt(e);if(i===drag.start)dig(i);}
+  else if(drag.changes.length){S.undo.push(drag.changes);if(S.undo.length>200)S.undo.shift();$("undoBtn").disabled=false;}
+  drag=null;
+}
+board.addEventListener("pointerup",endDrag);
+board.addEventListener("pointercancel",()=>{clearTimeout(lpTimer);drag=null;});
+board.addEventListener("contextmenu",e=>e.preventDefault());
+
+$("undoBtn").onclick=()=>{const ch=S.undo.pop();if(!ch)return;for(let k=ch.length-1;k>=0;k--){const[j,old]=ch[k];if(S.marks[j]!==3&&S.marks[j]!==4){S.marks[j]=old;renderCell(j);}}$("undoBtn").disabled=!S.undo.length;};
+$("restartBtn").onclick=()=>newGame(S.n,S.level);
+$("prev").onclick=()=>{if(S.level>1)newGame(S.n,S.level-1);};
+$("next").onclick=()=>newGame(S.n,S.level+1);
+$("sizes").addEventListener("click",e=>{const b=e.target.closest("[data-size]");if(!b)return;const n=+b.dataset.size;
+  const cl=(progress[n]&&progress[n].cleared)||[];let l=1;while(cl.includes(l))l++;newGame(n,l);});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)stopTimer();else if(S&&S.started&&!S.done)startTimer();});
+
+/* ---------- boot ---------- */
+function start(data){
+  const snap=data&&data.state;
+  if(snap){newGame(snap.n,snap.level,snap);setMode(data.mode||"mark");return;}
+  const last=store.get("fossildig.last",{n:6,level:1});
+  newGame(SIZES.includes(last.n)?last.n:6,Math.max(1,last.level|0));
+}
+window.claude?.hot?.snapshot?.(()=>({state:S&&{n:S.n,level:S.level,marks:S.marks,lives:S.lives,elapsed:S.elapsed,started:S.started,done:S.done,undo:S.undo},mode}));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+
+</body>
+</html>
