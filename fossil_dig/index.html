@@ -15,7 +15,7 @@
 :root{
   --bg:#EFE7D8; --paper:#F8F3E8; --ink:#2E261F; --muted:#76695A; --line:#CDBFA8;
   --accent:#B5542C; --accent-ink:#FFF8EE; --bad:#B3261E; --good:#4E7A3A;
-  --bone:#F7EFDC; --bone-edge:#3A2E24; --grid:#3A2E24; --cellgap:rgba(58,46,36,.16); --edge:rgba(58,46,36,.5);
+  --bone:#F7EFDC; --bone-edge:#3A2E24; --stone:#8F877C; --stone-hi:#B9B2A7; --stone-edge:#4A4239; --grid:#3A2E24; --cellgap:rgba(58,46,36,.16); --edge:rgba(58,46,36,.5);
   --r0:#E6C176; --r1:#D98B6A; --r2:#A9C08C; --r3:#9DB4CA; --r4:#D7A4B2;
   --r5:#EADCB2; --r6:#8FC4B6; --r7:#B7A9D6; --r8:#BC9C7C;
   --f-display:"Zilla Slab",Rockwell,"Roboto Slab",Georgia,serif;
@@ -25,13 +25,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#1B1713; --paper:#25201A; --ink:#EEE4D3; --muted:#A99A86; --line:#43392E;
   --accent:#E07B4C; --accent-ink:#1B1713; --bad:#FF6B5E; --good:#8FC27A;
-  --bone:#F3E9D2; --bone-edge:#1A140F; --grid:#0F0C09; --cellgap:rgba(0,0,0,.28); --edge:rgba(0,0,0,.6);
+  --bone:#F3E9D2; --bone-edge:#1A140F; --stone:#9A9184; --stone-hi:#C8C0B4; --stone-edge:#1A140F; --grid:#0F0C09; --cellgap:rgba(0,0,0,.28); --edge:rgba(0,0,0,.6);
   --r0:#A27A22; --r1:#8A4A33; --r2:#56703F; --r3:#435C77; --r4:#7F4C5B;
   --r5:#7D7468; --r6:#3C7266; --r7:#5B4E85; --r8:#5A3E2B; color-scheme:dark;}}
 :root[data-theme="dark"]{
   --bg:#1B1713; --paper:#25201A; --ink:#EEE4D3; --muted:#A99A86; --line:#43392E;
   --accent:#E07B4C; --accent-ink:#1B1713; --bad:#FF6B5E; --good:#8FC27A;
-  --bone:#F3E9D2; --bone-edge:#1A140F; --grid:#0F0C09; --cellgap:rgba(0,0,0,.28); --edge:rgba(0,0,0,.6);
+  --bone:#F3E9D2; --bone-edge:#1A140F; --stone:#9A9184; --stone-hi:#C8C0B4; --stone-edge:#1A140F; --grid:#0F0C09; --cellgap:rgba(0,0,0,.28); --edge:rgba(0,0,0,.6);
   --r0:#A27A22; --r1:#8A4A33; --r2:#56703F; --r3:#435C77; --r4:#7F4C5B;
   --r5:#7D7468; --r6:#3C7266; --r7:#5B4E85; --r8:#5A3E2B; color-scheme:dark;}
 
@@ -72,6 +72,9 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
              inset 0 var(--bt,0) 0 var(--edge), inset 0 calc(-1*var(--bb,0)) 0 var(--edge)}
 .cell .x{width:38%;height:38%;color:var(--ink);opacity:.55}
 .cell.auto .x{opacity:.28}
+.cell .stone{width:52%;height:52%;animation:drop .18s ease-out}
+.cell.clash::before{content:"";position:absolute;inset:14%;border:2px solid var(--bad);border-radius:50%;pointer-events:none}
+@keyframes drop{0%{transform:translate(-50%,-80%) scale(.7);opacity:.4}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .cell .bone{width:84%;height:84%;animation:pop .28s ease-out;rotate:var(--rot,0deg)}
 .cell.bad{background:repeating-linear-gradient(135deg,var(--rc) 0 6px,color-mix(in srgb,var(--bad) 22%,var(--rc)) 6px 12px)}
 .cell.bad .x{color:var(--bad);opacity:1;width:46%;height:46%}
@@ -82,15 +85,18 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
 
 .tray{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:stretch}
-.mode{display:grid;grid-template-columns:1fr 1fr;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:3px;gap:3px}
-.mode button{border:0;border-radius:11px;background:transparent;color:var(--ink);font:600 .95rem var(--f-body);
-  display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;cursor:pointer}
+.mode{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:3px;gap:3px}
+.mode button{border:0;border-radius:11px;background:transparent;color:var(--ink);font:600 .9rem var(--f-body);
+  display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;cursor:pointer}
 .mode button svg{width:22px;height:22px}
 .mode button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .tray .icon-btn{width:52px;height:auto;min-height:54px;border-radius:14px;font-size:.72rem;flex-direction:column;gap:2px;display:flex;align-items:center;justify-content:center}
 .tray .icon-btn svg{width:20px;height:20px}
 
 .meta{display:flex;justify-content:space-between;gap:10px;font-family:var(--f-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.optrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.textbtn{font:600 .82rem var(--f-body);color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:7px 12px;cursor:pointer}
+.textbtn:disabled{opacity:.4;cursor:default}
 .opt{display:flex;align-items:center;gap:8px;font:500 .85rem var(--f-body);color:var(--ink);cursor:pointer}
 .opt input{width:18px;height:18px;accent-color:var(--accent)}
 
@@ -108,7 +114,8 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .card .big{font-family:var(--f-mono);font-size:.85rem;color:var(--ink)}
 .cta{border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:600 1rem var(--f-body);padding:12px 16px;cursor:pointer;margin-top:4px}
 .cta.secondary{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
-@media (prefers-reduced-motion:reduce){.shake,.cell .bone,.cell.flash{animation:none}}
+@media (prefers-reduced-motion:reduce){.shake,.cell .bone,.cell .stone,.cell.flash{animation:none}}
+@media (max-width:380px){.mode button{flex-direction:column;gap:2px;font-size:.78rem}}
 </style>
 
 </head>
@@ -143,6 +150,7 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
     <symbol id="f-tooth" viewBox="0 0 100 100"><use href="#s-tooth" fill="var(--bone-edge)" stroke="var(--bone-edge)" stroke-width="8" stroke-linejoin="round"/><use href="#s-tooth" fill="var(--bone)"/><path d="M35 33 C46 37 58 35 67 31" stroke="var(--bone-edge)" stroke-opacity=".3" stroke-width="2.5" fill="none"/><path d="M65 44 L68 45 M63 55 L66 56 M60 66 L63 67" stroke="var(--bone-edge)" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"/></symbol>
     <g id="s-horn"><path d="M30 82 C30 56 40 34 63 11 C67 8 71 11 69 16 C56 36 54 58 58 82 Z"/><path d="M12 80 Q44 70 76 80 L78 93 L10 93 Z"/></g>
     <symbol id="f-horn" viewBox="0 0 100 100"><use href="#s-horn" fill="var(--bone-edge)" stroke="var(--bone-edge)" stroke-width="8" stroke-linejoin="round"/><use href="#s-horn" fill="var(--bone)"/><path d="M32 70 L56 68 M35 56 L56 54 M40 42 L59 40" stroke="var(--bone-edge)" stroke-opacity=".25" stroke-width="2.5" stroke-linecap="round"/></symbol>
+    <symbol id="stone" viewBox="0 0 100 100"><path d="M14 58 C10 38 30 20 54 20 C76 20 92 36 88 56 C85 74 68 82 48 82 C28 82 17 72 14 58 Z" fill="var(--stone)" stroke="var(--stone-edge)" stroke-width="6" stroke-linejoin="round"/><path d="M30 44 C34 34 46 29 56 30" stroke="var(--stone-hi)" stroke-width="7" stroke-linecap="round" fill="none"/></symbol>
     <symbol id="xmark" viewBox="0 0 24 24"><path d="M5 5 L19 19 M19 5 L5 19" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" fill="none"/></symbol>
     <symbol id="snd-on" viewBox="0 0 24 24"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="currentColor"/><path d="M16 9 a4 4 0 0 1 0 6 M18.5 6.5 a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></symbol>
     <symbol id="snd-off" viewBox="0 0 24 24"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="currentColor"/><path d="M16 9.5 L21 14.5 M21 9.5 L16 14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
@@ -180,21 +188,26 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   <div class="tray">
     <div class="mode" role="group" aria-label="Tool">
       <button id="modeMark" aria-pressed="true"><svg><use href="#xmark"/></svg>Mark</button>
+      <button id="modeStone" aria-pressed="false"><svg viewBox="0 0 100 100"><use href="#stone"/></svg>Stone</button>
       <button id="modeDig" aria-pressed="false"><svg viewBox="0 0 100 100"><use href="#bone"/></svg>Dig</button>
     </div>
     <button class="icon-btn" id="undoBtn" aria-label="Undo mark"><svg><use href="#undo"/></svg>Undo</button>
     <button class="icon-btn" id="restartBtn" aria-label="Restart dig"><svg><use href="#restart"/></svg>Reset</button>
   </div>
 
-  <label class="opt"><input type="checkbox" id="autoMark" checked> Auto-mark cells ruled out by each fossil</label>
+  <div class="optrow">
+    <label class="opt"><input type="checkbox" id="autoMark" checked> Auto-mark cells ruled out by each fossil</label>
+    <button class="textbtn" id="clearStones" disabled>Clear stones</button>
+  </div>
 
   <section class="rules">
     <h2>Field rules</h2>
     <ul>
       <li>Each row, column and rock stratum (color) holds exactly one fossil.</li>
       <li>Fossils never touch, not even diagonally.</li>
-      <li><b>Mark</b> rules out a cell. Drag to mark several. <b>Dig</b> excavates a fossil.</li>
-      <li>Digging an empty cell costs one of three lives. Long-press any cell to dig while in Mark mode.</li>
+      <li><b>Mark</b> rules out a cell. <b>Stone</b> sets a placeholder where you think a fossil might be, to test a line of reasoning. <b>Dig</b> excavates a fossil. Drag to mark or place stones on several cells.</li>
+      <li>Stones cost nothing. A red ring means a stone breaks a rule against another stone or a fossil.</li>
+      <li>Digging an empty cell costs one of three lives. Long-press any cell to dig while in Mark or Stone mode.</li>
     </ul>
   </section>
 </div>
@@ -274,12 +287,17 @@ function buildBoard(){
 
 const XSVG='<svg class="x"><use href="#xmark"/></svg>';
 function BSVG(row){const f=FOSSILS[S.kinds[row]];return `<svg class="bone" viewBox="0 0 100 100" style="--rot:${S.rot[row]||0}deg"><use href="#f-${f.id}"/></svg>`;}
+const STONE='<svg class="stone" viewBox="0 0 100 100"><use href="#stone"/></svg>';
+function conflict(a,b){const n=S.n,ay=Math.floor(a/n),ax=a%n,by=Math.floor(b/n),bx=b%n;
+  return ay===by||ax===bx||S.regions[ay][ax]===S.regions[by][bx]||(Math.abs(ay-by)<=1&&Math.abs(ax-bx)<=1);}
+function clashes(i){for(let j=0;j<S.marks.length;j++){if(j!==i&&(S.marks[j]===5||S.marks[j]===3)&&conflict(i,j))return true;}return false;}
+function refreshStones(){let any=false;S.marks.forEach((v,j)=>{if(v===5){any=true;$("board").children[j].classList.toggle("clash",clashes(j));}});$("clearStones").disabled=!any||!!S.done;}
 function renderCell(i){
   const c=$("board").children[i];const v=S.marks[i];
-  c.classList.toggle("auto",v===2);c.classList.toggle("bad",v===4);
+  c.classList.toggle("auto",v===2);c.classList.toggle("bad",v===4);c.classList.toggle("clash",v===5&&clashes(i));
   const y=Math.floor(i/S.n),x=i%S.n;
-  c.innerHTML=v===1||v===2||v===4?XSVG:v===3?BSVG(y):"";
-  c.setAttribute("aria-label",`Row ${y+1} column ${x+1}, ${v===3?FOSSILS[S.kinds[y]].name:["empty","marked","marked","","empty, wrong dig"][v]}`);
+  c.innerHTML=v===1||v===2||v===4?XSVG:v===3?BSVG(y):v===5?STONE:"";
+  c.setAttribute("aria-label",`Row ${y+1} column ${x+1}, ${v===3?FOSSILS[S.kinds[y]].name:["empty","marked","marked","","empty, wrong dig","stone"][v]}`);
 }
 function renderAll(){
   const {n,level}=S;
@@ -295,6 +313,7 @@ function renderAll(){
   $("formation").textContent=pick(FORMATIONS,n,level,0)+(cleared?` · best ${fmt(best)}`:"");
   $("undoBtn").disabled=!S.undo.length||S.done;
   renderTimer();
+  refreshStones();
   renderOverlay();
 }
 function fmt(s){s=Math.floor(s||0);return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");}
@@ -383,7 +402,9 @@ const sfx={
   bad(){tone(160,.3,{gain:.45,to:55});noise(.35,{gain:.3,freq:500,q:.7,ftype:"lowpass"});noise(.2,{gain:.15,freq:900,at:.12,ftype:"lowpass"});},
   win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.35,{type:"triangle",gain:.13,at:.12+i*.09}));tone(1568,.6,{gain:.06,at:.6});},
   lose(){[392,330,262,196].forEach((f,i)=>tone(f,.4,{type:"triangle",gain:.15,at:.25+i*.16}));noise(.6,{gain:.25,freq:300,ftype:"lowpass",at:.1});},
-  ui(){tone(900,.04,{type:"triangle",gain:.07});}
+  ui(){tone(900,.04,{type:"triangle",gain:.07});},
+  stone(){tone(330,.09,{type:"triangle",gain:.2,to:260});noise(.03,{gain:.12,freq:1400,q:1.5});},
+  unstone(){tone(250,.06,{type:"triangle",gain:.12,to:200});}
 };
 function renderSound(){const b=$("soundBtn");b.setAttribute("aria-pressed",soundOn);b.setAttribute("aria-label",soundOn?"Sound on":"Sound off");b.querySelector("use").setAttribute("href",soundOn?"#snd-on":"#snd-off");}
 $("soundBtn").onclick=()=>{soundOn=!soundOn;store.set("fossildig.sound",soundOn);renderSound();sfx.ui();};
@@ -391,15 +412,18 @@ renderSound();
 
 /* ---------- input ---------- */
 let mode="mark";
-function setMode(m){mode=m;$("modeMark").setAttribute("aria-pressed",m==="mark");$("modeDig").setAttribute("aria-pressed",m==="dig");}
-$("modeMark").onclick=()=>{setMode("mark");sfx.ui();};$("modeDig").onclick=()=>{setMode("dig");sfx.ui();};
+function setMode(m){mode=m;for(const k of ["Mark","Stone","Dig"])$("mode"+k).setAttribute("aria-pressed",m===k.toLowerCase());}
+$("modeMark").onclick=()=>{setMode("mark");sfx.ui();};$("modeDig").onclick=()=>{setMode("dig");sfx.ui();};$("modeStone").onclick=()=>{setMode("stone");sfx.ui();};
 
 let drag=null,lpTimer=null;
+function playPaint(v){(v===5?sfx.stone:v===1?sfx.mark:drag&&drag.tool==="stone"?sfx.unstone:sfx.unmark)();}
 function cellAt(e){const el=document.elementFromPoint(e.clientX,e.clientY);const c=el&&el.closest&&el.closest(".cell");return c&&c.parentNode===$("board")?+c.dataset.i:null;}
 function paint(i){
   const v=S.marks[i];if(v===3||v===4)return;
-  const want=drag.value;if((want===1&&(v===1||v===2))||(want===0&&v===0))return;
-  drag.changes.push([i,v]);S.marks[i]=want;renderCell(i);if(drag.changes.length>1)(want?sfx.mark:sfx.unmark)();
+  const want=drag.value;
+  if(drag.tool==="mark"){if(want===1&&v!==0)return;if(want===0&&v!==1&&v!==2)return;}
+  else{if(want===5&&v===5)return;if(want===0&&v!==5)return;}
+  drag.changes.push([i,v]);S.marks[i]=want;renderCell(i);refreshStones();if(drag.changes.length>1)playPaint(want);
 }
 const board=$("board");
 board.addEventListener("pointerdown",e=>{
@@ -408,7 +432,8 @@ board.addEventListener("pointerdown",e=>{
   if(mode==="dig"){drag={type:"dig",start:i};return;}
   const v=S.marks[i];if(v===3||v===4){drag=null;return;}
   touchStart();
-  drag={type:"mark",value:(v===0)?1:0,changes:[],start:i,moved:false};paint(i);(drag.value?sfx.mark:sfx.unmark)();
+  const val=mode==="stone"?(v===5?0:5):(v===1||v===2?0:1);
+  drag={type:"mark",tool:mode,value:val,changes:[],start:i,moved:false};paint(i);if(drag.changes.length)playPaint(val);
   lpTimer=setTimeout(()=>{ if(drag&&drag.type==="mark"&&!drag.moved){ // long press -> dig
       drag.changes.forEach(([j,old])=>{S.marks[j]=old;renderCell(j);});drag=null;dig(i);} },450);
 });
@@ -426,7 +451,9 @@ board.addEventListener("pointerup",endDrag);
 board.addEventListener("pointercancel",()=>{clearTimeout(lpTimer);drag=null;});
 board.addEventListener("contextmenu",e=>e.preventDefault());
 
-$("undoBtn").onclick=()=>{const ch=S.undo.pop();if(!ch)return;sfx.unmark();for(let k=ch.length-1;k>=0;k--){const[j,old]=ch[k];if(S.marks[j]!==3&&S.marks[j]!==4){S.marks[j]=old;renderCell(j);}}$("undoBtn").disabled=!S.undo.length;};
+$("undoBtn").onclick=()=>{const ch=S.undo.pop();if(!ch)return;sfx.unmark();for(let k=ch.length-1;k>=0;k--){const[j,old]=ch[k];if(S.marks[j]!==3&&S.marks[j]!==4){S.marks[j]=old;renderCell(j);}}refreshStones();$("undoBtn").disabled=!S.undo.length;};
+$("clearStones").onclick=()=>{const ch=[];S.marks.forEach((v,j)=>{if(v===5){ch.push([j,5]);S.marks[j]=0;renderCell(j);}});
+  if(ch.length){S.undo.push(ch);$("undoBtn").disabled=false;sfx.unstone();}refreshStones();};
 $("restartBtn").onclick=()=>newGame(S.n,S.level);
 $("prev").onclick=()=>{if(S.level>1)newGame(S.n,S.level-1);};
 $("next").onclick=()=>newGame(S.n,S.level+1);
